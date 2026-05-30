@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Priority Task Manager</title>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+    }
+
+    .container {
+        max-width: 600px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    input, button {
+        width: 100%;
+        padding: 12px;
+        margin: 6px 0;
+        font-size: 16px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    button {
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    button:hover {
+        background: #0056b3;
+    }
+
+    table {
+        width: 100%;
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 12px;
+        border-bottom: 1px solid #ddd;
+        text-align: left;
+    }
+
+    th {
+        background: #eee;
+    }
+
+    .btn-small {
+        padding: 6px 10px;
+        font-size: 14px;
+        margin-right: 5px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .edit-btn {
+        background: #ffc107;
+        color: black;
+    }
+
+    .delete-btn {
+        background: #dc3545;
+        color: white;
+    }
+
+    @media (max-width: 480px) {
+        th, td {
+            font-size: 14px;
+            padding: 8px;
+        }
+        button, input {
+            font-size: 14px;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>Priority Task Manager</h1>
+
+    <input id="taskName" type="text" placeholder="Task name">
+    <input id="priority" type="number" placeholder="Priority (1 = highest)">
+    <input id="dueDate" type="date">
+
+    <button onclick="addTask()">Add Task</button>
+
+    <table id="taskTable">
+        <thead>
+            <tr>
+                <th>Task</th>
+                <th>Priority</th>
+                <th>Due</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function saveTasks() {
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function addTask() {
+        const name = document.getElementById("taskName").value;
+        const priority = parseInt(document.getElementById("priority").value);
+        const dueDate = document.getElementById("dueDate").value;
+
+        if (!name || !priority || !dueDate) {
+            alert("Please fill out all fields");
+            return;
+        }
+
+        tasks.push({ name, priority, dueDate });
+        tasks.sort((a, b) => a.priority - b.priority);
+
+        saveTasks();
+        renderTable();
+
+        document.getElementById("taskName").value = "";
+        document.getElementById("priority").value = "";
+        document.getElementById("dueDate").value = "";
+    }
+
+    function deleteTask(index) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTable();
+    }
+
+    function editTask(index) {
+        const task = tasks[index];
+
+        const newName = prompt("Edit task name:", task.name);
+        if (newName === null) return;
+
+        const newPriority = prompt("Edit priority:", task.priority);
+        if (newPriority === null) return;
+
+        const newDueDate = prompt("Edit due date (YYYY-MM-DD):", task.dueDate);
+        if (newDueDate === null) return;
+
+        tasks[index] = {
+            name: newName,
+            priority: parseInt(newPriority),
+            dueDate: newDueDate
+        };
+
+        tasks.sort((a, b) => a.priority - b.priority);
+        saveTasks();
+        renderTable();
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector("#taskTable tbody");
+        tbody.innerHTML = "";
+
+        tasks.forEach((task, index) => {
+            const row = document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${task.name}</td>
+                <td>${task.priority}</td>
+                <td>${task.dueDate}</td>
+                <td>
+                    <button class="btn-small edit-btn" onclick="editTask(${index})">Edit</button>
+                    <button class="btn-small delete-btn" onclick="deleteTask(${index})">Delete</button>
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
